@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadcn JWT Decoder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: 0 0% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 0 0% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --popover: 0 0% 3.9%;
+            --popover-foreground: 0 0% 98%;
+            --primary: 0 0% 98%;
+            --primary-foreground: 0 0% 9%;
+            --secondary: 0 0% 14.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 0 0% 14.9%;
+            --muted-foreground: 0 0% 63.9%;
+            --accent: 0 0% 14.9%;
+            --accent-foreground: 0 0% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 0 0% 14.9%;
+            --input: 0 0% 14.9%;
+            --ring: 0 0% 83.1%;
+            --radius: 0.5rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 400;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+            line-height: 1.5;
+            min-height: 100vh;
+            padding: 2rem;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 48rem;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background-color: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .title {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: hsl(var(--foreground));
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 2rem;
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: hsl(var(--foreground));
+        }
+
+        .textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: hsl(var(--background));
+            border: 1px solid hsl(var(--border));
+            border-radius: calc(var(--radius) - 2px);
+            color: hsl(var(--foreground));
+            font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            transition: all 0.2s ease;
+            resize: vertical;
+            min-height: 6rem;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: hsl(var(--ring));
+            box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+        }
+
+        .textarea::placeholder {
+            color: hsl(var(--muted-foreground));
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.625rem 1rem;
+            border-radius: calc(var(--radius) - 2px);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+
+        .button:hover {
+            background-color: hsl(var(--primary) / 0.9);
+        }
+
+        .button:active {
+            transform: translateY(1px);
+        }
+
+        .button-secondary {
+            background-color: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+            border: 1px solid hsl(var(--border));
+        }
+
+        .button-secondary:hover {
+            background-color: hsl(var(--secondary) / 0.8);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .output-container {
+            background-color: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .output-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .output-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .output-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: hsl(var(--muted-foreground));
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .output-text {
+            background-color: hsl(var(--muted));
+            border: 1px solid hsl(var(--border));
+            border-radius: calc(var(--radius) - 2px);
+            padding: 0.75rem;
+            font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.8125rem;
+            color: hsl(var(--foreground));
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-y: auto;
+            line-height: 1.4;
+            resize: vertical;
+            min-height: auto;
+            height: auto;
+        }
+
+        .copy-button {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            height: auto;
+            min-width: auto;
+        }
+
+        .alert {
+            padding: 0.75rem;
+            border-radius: calc(var(--radius) - 2px);
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            border: 1px solid;
+        }
+
+        .alert-error {
+            background-color: hsl(var(--destructive) / 0.1);
+            border-color: hsl(var(--destructive) / 0.5);
+            color: hsl(var(--destructive-foreground));
+        }
+
+        .alert-success {
+            background-color: hsl(142 76% 36% / 0.1);
+            border-color: hsl(142 76% 36% / 0.5);
+            color: hsl(142 76% 36%);
+        }
+
+        .icon {
+            width: 1rem;
+            height: 1rem;
+            flex-shrink: 0;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(0.5rem);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Scrollbar styles */
+        .output-text::-webkit-scrollbar {
+            width: 0.5rem;
+        }
+
+        .output-text::-webkit-scrollbar-track {
+            background: hsl(var(--muted) / 0.5);
+            border-radius: 0.25rem;
+        }
+
+        .output-text::-webkit-scrollbar-thumb {
+            background: hsl(var(--muted-foreground) / 0.3);
+            border-radius: 0.25rem;
+        }
+
+        .output-text::-webkit-scrollbar-thumb:hover {
+            background: hsl(var(--muted-foreground) / 0.5);
+        }
+
+        .justification {
+            background: hsl(var(--muted) / 0.3);
+            border: 1px solid hsl(var(--border) / 0.5);
+            border-radius: calc(var(--radius) - 2px);
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .justification-text {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+            line-height: 1.6;
+            font-style: italic;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1 class="title">Shadcn JWT Decoder</h1>
+            <p class="subtitle">Decode JWT tokens and visualize payload in structured formats</p>
+            
+            <div class="justification">
+                <p class="justification-text">
+                    Finally, a JWT decoder that respects your eyes. While every other free tool forces you to stare at bright white backgrounds, 
+                    we believe analyzing JSON shouldn't feel like looking directly into the sun. Built with Shadcn's elegant dark theme, 
+                    this decoder provides the comfort and clarity developers deserve when working with tokens.
+                </p>
+            </div>
+            
+            <div class="form-group">
+                <label class="label" for="base64Input">JWT Token</label>
+                <textarea 
+                    id="base64Input" 
+                    class="textarea" 
+                    placeholder="Paste your JWT token here..."
+                    rows="4"
+                ></textarea>
+            </div>
+
+            <div class="button-group">
+                <button id="decodeBtn" class="button">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3"></path>
+                    </svg>
+                    Decode
+                </button>
+                <button id="clearBtn" class="button button-secondary">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Clear
+                </button>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <div id="outputContainer" class="output-container" style="display: none;">
+                <div class="output-section">
+                    <div class="output-header">
+                        <span class="output-label">Oneline</span>
+                        <button class="button copy-button" data-copy="oneline">
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                    <div id="onelineOutput" class="output-text"></div>
+                </div>
+
+                <div class="output-section">
+                    <div class="output-header">
+                        <span class="output-label">Jsonified</span>
+                        <button class="button copy-button" data-copy="json">
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                    <div id="jsonOutput" class="output-text"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let decodedData = {
+            json: '',
+            oneline: ''
+        };
+
+        function showAlert(message, type = 'error') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            
+            alertContainer.innerHTML = `
+                <div class="alert ${alertClass} fade-in">
+                    ${message}
+                </div>
+            `;
+
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 3000);
+        }
+
+        // Eliminar función de validación innecesaria - usar solo atob() como base64decode.org
+
+        function decodeBase64() {
+            const input = document.getElementById('base64Input').value.trim();
+            
+            if (!input) {
+                showAlert('Please enter a JWT token to decode.');
+                return;
+            }
+
+            try {
+                let decoded = '';
+                
+                // Verificar si es JWT
+                if (input.includes('.') && input.split('.').length === 3) {
+                    const parts = input.split('.');
+                    
+                    // Función para decodificar partes JWT
+                    function decodeJWTPart(part) {
+                        part = part + '='.repeat((4 - part.length % 4) % 4);
+                        return atob(part);
+                    }
+                    
+                    // Decodificar header y payload
+                    const headerObj = JSON.parse(decodeJWTPart(parts[0]));
+                    const payloadObj = JSON.parse(decodeJWTPart(parts[1]));
+                    
+                    // JSON formateado
+                    const headerJson = JSON.stringify(headerObj, null, 2);
+                    const payloadJson = JSON.stringify(payloadObj, null, 2);
+                    decoded = `HEADER:\n${headerJson}\n\nPAYLOAD:\n${payloadJson}`;
+                    
+                    // Una línea
+                    const headerOneline = JSON.stringify(headerObj);
+                    const payloadOneline = JSON.stringify(payloadObj);
+                    const onelineDecoded = `${headerOneline}${payloadOneline}`;
+                    
+                    decodedData.json = decoded;
+                    decodedData.oneline = onelineDecoded;
+                } else {
+                    // Base64 normal
+                    decoded = atob(input);
+                    decodedData.json = decoded;
+                    decodedData.oneline = decoded.replace(/\n/g, ' ');
+                }
+
+                // Mostrar resultados y ajustar altura
+                const jsonOutput = document.getElementById('jsonOutput');
+                const onelineOutput = document.getElementById('onelineOutput');
+                
+                jsonOutput.textContent = decodedData.json;
+                onelineOutput.textContent = decodedData.oneline;
+                
+                // Ajustar altura automáticamente al contenido
+                setTimeout(() => {
+                    jsonOutput.style.height = 'auto';
+                    jsonOutput.style.height = Math.min(jsonOutput.scrollHeight, 300) + 'px';
+                    
+                    onelineOutput.style.height = 'auto';
+                    onelineOutput.style.height = Math.min(onelineOutput.scrollHeight, 150) + 'px';
+                }, 10);
+
+                // Mostrar contenedor de salida
+                const outputContainer = document.getElementById('outputContainer');
+                outputContainer.style.display = 'block';
+                outputContainer.classList.add('fade-in');
+
+                // Removed success alert - smooth transition only
+            } catch (error) {
+                showAlert('Invalid JWT token format.');
+            }
+        }
+
+        function copyToClipboard(text, type) {
+            navigator.clipboard.writeText(text).then(() => {
+                const typeNames = {
+                    json: 'Jsonified content',
+                    oneline: 'Oneline content'
+                };
+                showAlert(`${typeNames[type]} copied to clipboard!`, 'success');
+            }).catch(() => {
+                showAlert('Error copying to clipboard');
+            });
+        }
+
+        function clearAll() {
+            document.getElementById('base64Input').value = '';
+            document.getElementById('outputContainer').style.display = 'none';
+            document.getElementById('alertContainer').innerHTML = '';
+            decodedData = { json: '', oneline: '' };
+        }
+
+        // Event listeners
+        document.getElementById('decodeBtn').addEventListener('click', decodeBase64);
+        document.getElementById('clearBtn').addEventListener('click', clearAll);
+
+        // Copy buttons
+        document.querySelectorAll('.copy-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const copyType = e.currentTarget.getAttribute('data-copy');
+                
+                switch(copyType) {
+                    case 'json':
+                        copyToClipboard(decodedData.json, 'json');
+                        break;
+                    case 'oneline':
+                        copyToClipboard(decodedData.oneline, 'oneline');
+                        break;
+                }
+            });
+        });
+
+        // Allow Enter key to decode
+        document.getElementById('base64Input').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                decodeBase64();
+            }
+        });
+    </script>
+</body>
+</html>
